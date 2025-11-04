@@ -1,0 +1,135 @@
+[gd_scene load_steps=2 format=3 uid="uid://dq8k5m7n3wv2p"]
+
+[ext_resource type="Script" path="res://Scripts/ScoreScreen.gd" id="1_1"]
+
+[node name="ScoreScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_1")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.756863, 0.603922, 0.419608, 1)
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -300.0
+offset_right = 300.0
+offset_bottom = 300.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+
+[node name="TaskList" type="VBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TotalScore" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.843137, 0, 1)
+theme_override_font_sizes/font_size = 32
+text = "TOTAL SCORE
+0"
+horizontal_alignment = 1
+
+[node name="CountdownLabel" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.721569, 0.721569, 0.721569, 1)
+theme_override_font_sizes/font_size = 18
+text = "Returning to menu in 8s"
+horizontal_alignment = 1
+
+[node name="NameInputPopup" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Overlay" type="ColorRect" parent="NameInputPopup"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.85)
+
+[node name="Panel" type="PanelContainer" parent="NameInputPopup"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -200.0
+offset_right = 250.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="NameInputPopup/Panel"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="NameInputPopup/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.843137, 0, 1)
+theme_override_font_sizes/font_size = 42
+text = "TOP 10!"
+horizontal_alignment = 1
+
+[node name="Message" type="Label" parent="NameInputPopup/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.996078, 0.941176, 1)
+theme_override_font_sizes/font_size = 24
+text = "🎉 You made it to the leaderboard! 🎉"
+horizontal_alignment = 1
+
+[node name="ScoreDisplay" type="Label" parent="NameInputPopup/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.843137, 0, 1)
+theme_override_font_sizes/font_size = 56
+text = "0"
+horizontal_alignment = 1
+
+[node name="NameLabel" type="Label" parent="NameInputPopup/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.996078, 0.941176, 1)
+theme_override_font_sizes/font_size = 20
+text = "Enter your name:"
+horizontal_alignment = 1
+
+[node name="NameInput" type="LineEdit" parent="NameInputPopup/Panel/VBox"]
+custom_minimum_size = Vector2(300, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+placeholder_text = "Rice"
+alignment = 1
+max_length = 15
+
+[node name="SubmitButton" type="Button" parent="NameInputPopup/Panel/VBox"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "SUBMIT"
+

@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3 uid="uid://c4qn7m8p5vr2k"]
+
+[ext_resource type="Script" path="res://Scripts/RiceParticle.gd" id="1_1"]
+
+[node name="RiceParticle" type="Node2D"]
+script = ExtResource("1_1")
+
+[node name="Sprite" type="ColorRect" parent="."]
+offset_left = -8.0
+offset_top = -12.0
+offset_right = 8.0
+offset_bottom = 12.0
+color = Color(1, 0.996078, 0.941176, 1)
+

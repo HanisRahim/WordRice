@@ -1,0 +1,119 @@
+[gd_scene load_steps=2 format=3 uid="uid://c7m4p9r6x2k8w"]
+
+[ext_resource type="Script" path="res://Scripts/GameManager.gd" id="1_1"]
+
+[node name="GameScene" type="Node2D"]
+
+[node name="GameManager" type="Node2D" parent="."]
+script = ExtResource("1_1")
+
+[node name="Background" type="ColorRect" parent="GameManager"]
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0.756863, 0.603922, 0.419608, 1)
+
+[node name="UI" type="CanvasLayer" parent="GameManager"]
+
+[node name="Title" type="Label" parent="GameManager/UI"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -150.0
+offset_top = 20.0
+offset_right = 150.0
+offset_bottom = 80.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.239216, 0.156863, 0.0901961, 1)
+theme_override_font_sizes/font_size = 48
+text = "WORD RICE"
+horizontal_alignment = 1
+
+[node name="TimerLabel" type="Label" parent="GameManager/UI"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -100.0
+offset_top = 80.0
+offset_right = 100.0
+offset_bottom = 150.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.239216, 0.156863, 0.0901961, 1)
+theme_override_font_sizes/font_size = 64
+text = "0:30"
+horizontal_alignment = 1
+
+[node name="ProgressBar" type="ProgressBar" parent="GameManager/UI"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200.0
+offset_top = 180.0
+offset_right = 200.0
+offset_bottom = 215.0
+grow_horizontal = 2
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="TaskLabel" type="Label" parent="GameManager/UI"]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -260.0
+offset_right = 100.0
+offset_bottom = -230.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.239216, 0.156863, 0.0901961, 1)
+theme_override_font_sizes/font_size = 24
+text = "TASK"
+horizontal_alignment = 1
+
+[node name="TaskDisplay" type="HBoxContainer" parent="GameManager/UI"]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -250.0
+offset_top = -230.0
+offset_right = 250.0
+offset_bottom = -130.0
+grow_horizontal = 2
+grow_vertical = 0
+alignment = 1
+
+[node name="ScoreContainer" type="VBoxContainer" parent="GameManager/UI"]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -150.0
+offset_top = -120.0
+offset_right = -50.0
+offset_bottom = -50.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="ScoreTitle" type="Label" parent="GameManager/UI/ScoreContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.996078, 0.941176, 1)
+theme_override_font_sizes/font_size = 18
+text = "SCORE"
+horizontal_alignment = 1
+
+[node name="ScoreLabel" type="Label" parent="GameManager/UI/ScoreContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.843137, 0, 1)
+theme_override_font_sizes/font_size = 42
+text = "0000"
+horizontal_alignment = 1
+
+[node name="LetterPool" type="Node2D" parent="GameManager"]
+
+[node name="RiceParticles" type="Node2D" parent="GameManager"]
+

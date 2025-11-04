@@ -1,0 +1,68 @@
+[gd_scene load_steps=2 format=3 uid="uid://bw7k3n8m1qp5r"]
+
+[ext_resource type="Script" path="res://Scripts/InstructionsPopup.gd" id="1_1"]
+
+[node name="InstructionsPopup" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_1")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.8)
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -250.0
+offset_right = 300.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+
+[node name="InstructionsText" type="RichTextLabel" parent="Panel/VBox"]
+custom_minimum_size = Vector2(0, 350)
+layout_mode = 2
+bbcode_enabled = true
+text = "[center][color=gold][font_size=42]HOW TO PLAY[/font_size][/color][/center]
+
+[color=white]🎯 [b]Goal:[/b] Complete as many words as possible in 30 seconds!
+
+📝 [b]Gameplay:[/b]
+• You'll see a 4-letter word (greyed out) at the bottom
+• Click the correct letters from the pool to spell the word
+• Letters can be clicked in any order
+• Wrong letters will shake - try again!
+
+⚡ [b]Scoring:[/b] Faster completion = Higher points!
+
+🍚 [b]Watch for rice particle effects when you're right![/b][/color]"
+fit_content = true
+
+[node name="Separator" type="HSeparator" parent="Panel/VBox"]
+layout_mode = 2
+
+[node name="CountdownLabel" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.843137, 0, 1)
+theme_override_font_sizes/font_size = 72
+text = "5"
+horizontal_alignment = 1
+

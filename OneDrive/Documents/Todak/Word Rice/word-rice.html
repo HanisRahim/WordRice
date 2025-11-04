@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Rice</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', sans-serif;
+            overflow: hidden;
+            user-select: none;
+            background: #8B7355;
+        }
+
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            background: 
+                repeating-linear-gradient(
+                    45deg,
+                    #C19A6B 0px,
+                    #C19A6B 3px,
+                    #A0826D 3px,
+                    #A0826D 6px,
+                    #C19A6B 6px,
+                    #C19A6B 12px
+                ),
+                repeating-linear-gradient(
+                    -45deg,
+                    #C9A57B 0px,
+                    #C9A57B 3px,
+                    #B08968 3px,
+                    #B08968 6px,
+                    #C9A57B 6px,
+                    #C9A57B 12px
+                );
+            background-blend-mode: multiply;
+        }
+
+        #title {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 48px;
+            font-weight: bold;
+            color: #3D2817;
+            text-shadow: 3px 3px 0px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+
+        #timer {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 64px;
+            font-weight: bold;
+            color: #3D2817;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 10px 30px;
+            border-radius: 15px;
+            border: 4px solid #8B6914;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 100;
+        }
+
+        #task-label {
+            position: absolute;
+            bottom: 260px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: #3D2817;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 8px 20px;
+            border-radius: 10px;
+            z-index: 100;
+        }
+
+        #progress-bar-container {
+            position: absolute;
+            top: 180px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 400px;
+            height: 35px;
+            background: #8B6914;
+            border: 4px solid #5D4E37;
+            border-radius: 20px;
+            padding: 5px;
+            box-shadow: inset 0 3px 8px rgba(0,0,0,0.4);
+            z-index: 100;
+        }
+
+        #progress-bar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, #FFD700, #FFA500);
+            border-radius: 15px;
+            transition: width 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        #letters-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+        }
+
+        .letter-tile {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: #FFFEF0;
+            border: 3px solid #8B7355;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 42px;
+            font-weight: bold;
+            color: #3D2817;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 
+                0 4px 8px rgba(0,0,0,0.3),
+                inset 0 1px 0 rgba(255,255,255,0.5);
+            transform: rotate(var(--rotation, 0deg));
+        }
+
+        .letter-tile:hover {
+            transform: rotate(var(--rotation, 0deg)) scale(1.1);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+
+        .letter-tile.selected {
+            background: #FFE87C;
+            border-color: #FFD700;
+            transform: rotate(0deg) scale(1.05);
+        }
+
+        .letter-tile.used {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        #word-display-container {
+            position: absolute;
+            bottom: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 500px;
+            height: 100px;
+            background: #8B6914;
+            border: 5px solid #5D4E37;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+            z-index: 100;
+        }
+
+        .word-letter {
+            width: 70px;
+            height: 70px;
+            background: #FFFEF0;
+            border: 3px solid #8B7355;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 38px;
+            font-weight: bold;
+            color: #3D2817;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+        }
+
+        .word-letter.task-letter {
+            background: #B0A090;
+            color: #6D5D4D;
+        }
+
+        .word-letter.filled {
+            background: #FFE87C;
+            color: #3D2817;
+        }
+
+        .word-letter.lit {
+            background: #90EE90;
+            color: #2D5016;
+            box-shadow: 0 0 20px rgba(144, 238, 144, 0.8);
+            animation: glow 0.5s ease-in-out;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 3px 6px rgba(0,0,0,0.3); }
+            50% { box-shadow: 0 0 25px rgba(144, 238, 144, 0.9); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: rotate(var(--rotation, 0deg)) translateX(0); }
+            25% { transform: rotate(var(--rotation, 0deg)) translateX(-10px); }
+            75% { transform: rotate(var(--rotation, 0deg)) translateX(10px); }
+        }
+
+        .letter-tile.shake {
+            animation: shake 0.3s ease-in-out;
+        }
+
+        .letter-tile.flying {
+            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            z-index: 1000;
+        }
+
+        #score-container {
+            position: absolute;
+            bottom: 50px;
+            right: 50px;
+            background: #8B6914;
+            border: 5px solid #5D4E37;
+            border-radius: 15px;
+            padding: 15px 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+            z-index: 100;
+        }
+
+        #score-label {
+            font-size: 18px;
+            font-weight: bold;
+            color: #FFFEF0;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        #score {
+            font-size: 42px;
+            font-weight: bold;
+            color: #FFD700;
+            text-align: center;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.3);
+        }
+
+        #buttons-container {
+            position: absolute;
+            bottom: 50px;
+            left: 50px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .game-button {
+            padding: 15px 30px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #FFFEF0;
+            background: #8B6914;
+            border: 4px solid #5D4E37;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .game-button:hover {
+            background: #A67C00;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+
+        .game-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        #message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 36px;
+            font-weight: bold;
+            color: #FFD700;
+            background: rgba(61, 40, 23, 0.95);
+            padding: 30px 50px;
+            border-radius: 20px;
+            border: 5px solid #8B6914;
+            display: none;
+            z-index: 200;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-height: 80vh;
+            overflow-y: auto;
+            max-width: 600px;
+        }
+
+        #message.score-screen {
+            font-size: 24px;
+            text-align: left;
+        }
+
+        .score-header {
+            font-size: 36px;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #FFD700;
+        }
+
+        .task-list {
+            margin: 20px 0;
+            font-size: 18px;
+        }
+
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .task-word {
+            font-size: 22px;
+            font-weight: bold;
+            color: #FFFEF0;
+            min-width: 80px;
+        }
+
+        .task-time {
+            color: #B8B8B8;
+            font-size: 16px;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .task-score {
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 20px;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .penalty-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-top: 2px solid rgba(255, 107, 107, 0.3);
+            margin-top: 15px;
+        }
+
+        .penalty-label {
+            font-size: 20px;
+            color: #FF6B6B;
+            font-weight: bold;
+        }
+
+        .penalty-score {
+            font-size: 20px;
+            color: #FF6B6B;
+            font-weight: bold;
+        }
+
+        .final-score {
+            font-size: 32px;
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 3px solid #8B6914;
+            color: #FFD700;
+        }
+
+        .return-countdown {
+            font-size: 18px;
+            text-align: center;
+            margin-top: 15px;
+            color: #B8B8B8;
+            font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', sans-serif;
+        }
+
+        .return-countdown-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        #character {
+            position: absolute;
+            bottom: 240px;
+            left: 80px;
+            text-align: center;
+            z-index: 50;
+        }
+
+        #character-avatar {
+            font-size: 80px;
+        }
+
+        #character-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #FFFEF0;
+            background: rgba(61, 40, 23, 0.8);
+            padding: 5px 15px;
+            border-radius: 10px;
+            margin-top: -10px;
+        }
+
+        .rice-particle {
+            position: absolute;
+            width: 16px;
+            height: 24px;
+            background: linear-gradient(135deg, #FFFEF0 0%, #F5F5DC 50%, #E8E8D0 100%);
+            border-radius: 40% 40% 40% 40%;
+            pointer-events: none;
+            z-index: 999;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            will-change: transform, opacity;
+        }
+
+        /* Main Menu Styles */
+        #main-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: 
+                repeating-linear-gradient(
+                    45deg,
+                    #C19A6B 0px,
+                    #C19A6B 3px,
+                    #A0826D 3px,
+                    #A0826D 6px,
+                    #C19A6B 6px,
+                    #C19A6B 12px
+                ),
+                repeating-linear-gradient(
+                    -45deg,
+                    #C9A57B 0px,
+                    #C9A57B 3px,
+                    #B08968 3px,
+                    #B08968 6px,
+                    #C9A57B 6px,
+                    #C9A57B 12px
+                );
+            background-blend-mode: multiply;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        #main-menu-content {
+            text-align: center;
+            background: rgba(61, 40, 23, 0.9);
+            padding: 50px;
+            border-radius: 30px;
+            border: 6px solid #8B6914;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        #main-title {
+            font-size: 72px;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 4px 4px 0px rgba(0,0,0,0.3);
+            margin-bottom: 40px;
+            font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', sans-serif;
+        }
+
+        .menu-button {
+            padding: 20px 60px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #FFFEF0;
+            background: #8B6914;
+            border: 5px solid #5D4E37;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+            font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', sans-serif;
+            margin-bottom: 30px;
+        }
+
+        .menu-button:hover {
+            background: #A67C00;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+        }
+
+        .menu-button:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+        }
+
+        #leaderboard {
+            margin-top: 40px;
+            background: rgba(139, 105, 20, 0.3);
+            padding: 25px;
+            border-radius: 15px;
+            border: 3px solid #8B6914;
+            max-width: 400px;
+        }
+
+        #leaderboard h2 {
+            font-size: 32px;
+            color: #FFD700;
+            margin-bottom: 20px;
+            font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', sans-serif;
+        }
+
+        #leaderboard-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .leaderboard-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: rgba(255, 254, 240, 0.1);
+            border-radius: 8px;
+            font-size: 20px;
+            color: #FFFEF0;
+            font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', sans-serif;
+            gap: 15px;
+        }
+
+        .leaderboard-entry.top-3 {
+            background: rgba(255, 215, 0, 0.2);
+            border: 2px solid #FFD700;
+        }
+
+        .leaderboard-rank {
+            font-weight: bold;
+            color: #FFD700;
+            min-width: 40px;
+            flex-shrink: 0;
+        }
+
+        .leaderboard-name {
+            flex-grow: 1;
+            color: #FFFEF0;
+            text-align: left;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .leaderboard-score {
+            font-weight: bold;
+            color: #90EE90;
+            flex-shrink: 0;
+        }
+
+        /* Name Input Popup */
+        #name-input-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+        }
+
+        #name-input-content {
+            background: rgba(61, 40, 23, 0.95);
+            padding: 40px 50px;
+            border-radius: 25px;
+            border: 6px solid #8B6914;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            text-align: center;
+            font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', sans-serif;
+        }
+
+        #name-input-content h2 {
+            font-size: 42px;
+            color: #FFD700;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.3);
+        }
+
+        #name-input-content p {
+            font-size: 24px;
+            color: #FFFEF0;
+            margin-bottom: 30px;
+        }
+
+        #name-input-score {
+            font-size: 56px;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 3px 3px 0px rgba(0,0,0,0.3);
+            margin: 20px 0;
+        }
+
+        #player-name-input {
+            width: 300px;
+            padding: 15px;
+            font-size: 22px;
+            font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', sans-serif;
+            background: #FFFEF0;
+            border: 4px solid #8B6914;
+            border-radius: 10px;
+            text-align: center;
+            color: #3D2817;
+            margin-bottom: 25px;
+        }
+
+        #player-name-input:focus {
+            outline: none;
+            border-color: #FFD700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+
+        #submit-name-btn {
+            padding: 15px 50px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFFEF0;
+            background: #8B6914;
+            border: 4px solid #5D4E37;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', sans-serif;
+        }
+
+        #submit-name-btn:hover {
+            background: #A67C00;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+
+        #submit-name-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* Instructions Popup */
+        #instructions-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        #instructions-content {
+            background: rgba(61, 40, 23, 0.95);
+            padding: 40px 50px;
+            border-radius: 25px;
+            border: 6px solid #8B6914;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            max-width: 600px;
+            text-align: left;
+            font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', sans-serif;
+        }
+
+        #instructions-content h2 {
+            font-size: 42px;
+            color: #FFD700;
+            text-align: center;
+            margin-bottom: 25px;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.3);
+        }
+
+        #instructions-text {
+            color: #FFFEF0;
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        #instructions-text p {
+            margin-bottom: 15px;
+        }
+
+        #instructions-text ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        #instructions-text li {
+            margin-bottom: 8px;
+        }
+
+        #countdown-display {
+            font-size: 72px;
+            font-weight: bold;
+            color: #FFD700;
+            text-align: center;
+            text-shadow: 4px 4px 0px rgba(0,0,0,0.3);
+            animation: pulse 1s ease-in-out infinite;
+            padding-top: 10px;
+            border-top: 3px solid #8B6914;
+            margin-top: 20px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Menu -->
+    <div id="main-menu">
+        <div id="main-menu-content">
+            <h1 id="main-title">WORD RICE</h1>
+            <button class="menu-button" id="start-game-btn">START GAME</button>
+            
+            <div id="leaderboard">
+                <h2>LEADERBOARD</h2>
+                <div id="leaderboard-list">
+                    <!-- Leaderboard entries will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Name Input Popup -->
+    <div id="name-input-popup" style="display: none;">
+        <div id="name-input-content">
+            <h2>TOP 10!</h2>
+            <p>🎉 You made it to the leaderboard! 🎉</p>
+            <div id="name-input-score">0</div>
+            <p>Enter your name:</p>
+            <input type="text" id="player-name-input" maxlength="15" placeholder="Rice" />
+            <br>
+            <button id="submit-name-btn">SUBMIT</button>
+        </div>
+    </div>
+
+    <!-- Instructions Popup -->
+    <div id="instructions-popup" style="display: none;">
+        <div id="instructions-content">
+            <h2>HOW TO PLAY</h2>
+            <div id="instructions-text">
+                <p>🎯 <strong>Goal:</strong> Complete as many words as possible in 30 seconds!</p>
+                <p>📝 <strong>Gameplay:</strong></p>
+                <ul>
+                    <li>You'll see a 4-letter word (greyed out) at the bottom</li>
+                    <li>Click the correct letters from the pool to spell the word</li>
+                    <li>Letters can be clicked in any order</li>
+                    <li>Wrong letters will shake - try again!</li>
+                </ul>
+                <p>⚡ <strong>Scoring:</strong> Faster completion = Higher points!</p>
+                <p>🍚 <strong>Watch for rice particle effects when you're right!</strong></p>
+            </div>
+            <div id="countdown-display">5</div>
+        </div>
+    </div>
+
+    <div id="game-container" style="display: none;">
+        <div id="title">WORD RICE</div>
+        
+        <div id="timer">0:30</div>
+        
+        <div id="progress-bar-container">
+            <div id="progress-bar"></div>
+        </div>
+        
+        <div id="letters-container"></div>
+        
+        <div id="task-label">TASK</div>
+        
+        <div id="word-display-container">
+            <div class="word-letter task-letter" id="slot-0"></div>
+            <div class="word-letter task-letter" id="slot-1"></div>
+            <div class="word-letter task-letter" id="slot-2"></div>
+            <div class="word-letter task-letter" id="slot-3"></div>
+        </div>
+        
+        <div id="score-container">
+            <div id="score-label">SCORE</div>
+            <div id="score">0000</div>
+        </div>
+        
+        <div id="buttons-container">
+            <button class="game-button" id="clear-btn">CLEAR</button>
+            <button class="game-button" id="new-game-btn">MAIN MENU</button>
+        </div>
+
+        <div id="character">
+            <div id="character-avatar">🧑</div>
+            <div id="character-name">AMAN</div>
+        </div>
+        
+        <div id="message"></div>
+    </div>
+
+    <script>
+        // Game State
+        const gameState = {
+            letters: [],
+            selectedLetters: [],
+            score: 0,
+            timeLeft: 30,
+            timerInterval: null,
+            currentTask: '',
+            taskStartTime: 0,
+            tasksCompleted: 0,
+            completedTasks: [], // Store all completed tasks with details
+            wrongClicks: 0 // Track wrong letter clicks
+        };
+
+        // Common 4-letter words dictionary
+        const wordDictionary = new Set([
+            'WORD', 'RICE', 'GAME', 'PLAY', 'TIME', 'LOVE', 'HATE', 'LIKE', 'MAKE', 'TAKE',
+            'COME', 'SOME', 'THEM', 'THEN', 'THAN', 'THAT', 'THIS', 'WITH', 'HAVE', 'FROM',
+            'THEY', 'BEEN', 'WERE', 'WILL', 'YOUR', 'MORE', 'WHEN', 'WORK', 'ALSO', 'WELL',
+            'VERY', 'YEAR', 'BACK', 'CALL', 'CAME', 'EACH', 'EVEN', 'FEEL', 'FIND', 'GIVE',
+            'GOOD', 'HAND', 'HIGH', 'KEEP', 'LAST', 'LEFT', 'LIFE', 'LIVE', 'LONG', 'LOOK',
+            'MADE', 'MANY', 'MUST', 'NAME', 'NEED', 'NEXT', 'ONLY', 'OPEN', 'OVER', 'PART',
+            'REAL', 'SAID', 'SAME', 'SEEM', 'SHOW', 'SIDE', 'SUCH', 'SURE', 'TELL', 'TURN',
+            'USED', 'WANT', 'WAYS', 'WEEK', 'WENT', 'WHAT', 'WILD', 'WISE', 'WORK', 'YEAR',
+            'ABLE', 'ACID', 'AGED', 'ALSO', 'AREA', 'ARMY', 'AWAY', 'BABY', 'BALL', 'BAND',
+            'BANK', 'BASE', 'BEAR', 'BEAT', 'BEEF', 'BEER', 'BELL', 'BELT', 'BENT', 'BEST',
+            'BILL', 'BIRD', 'BITE', 'BLOW', 'BLUE', 'BOAT', 'BODY', 'BOLD', 'BONE', 'BOOK',
+            'BOOT', 'BORE', 'BORN', 'BOSS', 'BOTH', 'BOWL', 'BULK', 'BURN', 'BUSY', 'CAKE',
+            'CALM', 'CAMP', 'CARD', 'CARE', 'CART', 'CASE', 'CASH', 'CAST', 'CELL', 'CHAT',
+            'CHIP', 'CITY', 'CLAP', 'CLAY', 'CLIP', 'CLUB', 'CLUE', 'COAL', 'COAT', 'CODE',
+            'COIN', 'COLD', 'COOK', 'COOL', 'COPY', 'CORE', 'CORN', 'COST', 'CREW', 'CROP',
+            'DARK', 'DATA', 'DATE', 'DAWN', 'DAYS', 'DEAD', 'DEAL', 'DEAN', 'DEAR', 'DEBT',
+            'DECK', 'DEEP', 'DESK', 'DIAL', 'DIET', 'DIRT', 'DISC', 'DISK', 'DOSE', 'DOTS',
+            'DOVE', 'DOWN', 'DRAG', 'DRAW', 'DREW', 'DROP', 'DRUG', 'DRUM', 'DUAL', 'DUCK',
+            'DUKE', 'DUMP', 'DUSK', 'DUST', 'DUTY', 'EACH', 'EARN', 'EASE', 'EAST', 'EASY',
+            'EDGE', 'ELSE', 'EMIT', 'EPIC', 'EVEN', 'EVER', 'EVIL', 'EXAM', 'EXIT', 'FACE',
+            'FACT', 'FADE', 'FAIL', 'FAIR', 'FALL', 'FAME', 'FARE', 'FARM', 'FAST', 'FATE',
+            'FEAR', 'FEED', 'FEET', 'FELL', 'FELT', 'FILE', 'FILL', 'FILM', 'FINE', 'FIRE',
+            'FIRM', 'FISH', 'FIST', 'FIVE', 'FLAG', 'FLAT', 'FLED', 'FLEW', 'FLIP', 'FLOW',
+            'FOLK', 'FOOD', 'FOOL', 'FOOT', 'FORD', 'FORK', 'FORM', 'FORT', 'FOUR', 'FREE',
+            'FUEL', 'FULL', 'FUND', 'GAIN', 'GATE', 'GAVE', 'GEAR', 'GENE', 'GIFT', 'GIRL',
+            'GLAD', 'GLOW', 'GOAL', 'GOAT', 'GOES', 'GOLD', 'GOLF', 'GONE', 'GRAY', 'GREW',
+            'GREY', 'GRID', 'GRIM', 'GRIP', 'GROW', 'GULF', 'HAIR', 'HALF', 'HALL', 'HANG',
+            'HARD', 'HARM', 'HATE', 'HEAD', 'HEAR', 'HEAT', 'HELD', 'HELL', 'HELP', 'HERE',
+            'HERO', 'HIDE', 'HILL', 'HINT', 'HIRE', 'HOLD', 'HOLE', 'HOLY', 'HOME', 'HOPE',
+            'HORN', 'HOST', 'HOUR', 'HUGE', 'HUNG', 'HUNT', 'HURT', 'ICON', 'IDEA', 'INCH',
+            'INTO', 'IRON', 'ITEM', 'JACK', 'JAIL', 'JANE', 'JAZZ', 'JEAN', 'JOHN', 'JOIN',
+            'JOKE', 'JUAN', 'JUMP', 'JUNE', 'JURY', 'JUST', 'KEEN', 'KEPT', 'KICK', 'KILL',
+            'KIND', 'KING', 'KISS', 'KNEE', 'KNEW', 'KNIT', 'KNOW', 'LACK', 'LADY', 'LAID',
+            'LAKE', 'LAMP', 'LAND', 'LANE', 'LAST', 'LATE', 'LEAD', 'LEAN', 'LEAP', 'LEFT',
+            'LEND', 'LENS', 'LENT', 'LESS', 'LIFT', 'LINE', 'LINK', 'LION', 'LIST', 'LOAD',
+            'LOAN', 'LOCK', 'LOGO', 'LONE', 'LOOP', 'LORD', 'LOSE', 'LOSS', 'LOST', 'LOUD',
+            'LUCK', 'LUNG', 'MADE', 'MAID', 'MAIL', 'MAIN', 'MALE', 'MALL', 'MARK', 'MARS',
+            'MASK', 'MASS', 'MATE', 'MATH', 'MEAL', 'MEAN', 'MEAT', 'MEET', 'MELT', 'MENU',
+            'MERE', 'MESS', 'MICE', 'MILD', 'MILE', 'MILK', 'MILL', 'MIND', 'MINE', 'MISS',
+            'MODE', 'MOOD', 'MOON', 'MORE', 'MOST', 'MOVE', 'MUCH', 'MYTH', 'NAIL', 'NAVY',
+            'NEAR', 'NECK', 'NEST', 'NEWS', 'NICE', 'NINE', 'NODE', 'NONE', 'NOON', 'NORM',
+            'NOSE', 'NOTE', 'NOUN', 'OKAY', 'ONCE', 'ONES', 'ONTO', 'ORAL', 'OVEN', 'PACE',
+            'PACK', 'PAGE', 'PAID', 'PAIN', 'PAIR', 'PALM', 'PANT', 'PARK', 'PASS', 'PAST',
+            'PATH', 'PEAK', 'PICK', 'PILE', 'PILL', 'PINE', 'PINK', 'PIPE', 'PLAN', 'PLUG',
+            'PLUS', 'POEM', 'POET', 'POLE', 'POLL', 'POND', 'POOL', 'POOR', 'POPE', 'PORK',
+            'PORT', 'POSE', 'POST', 'POUR', 'PRAY', 'PREP', 'PREY', 'PURE', 'PUSH', 'RACE',
+            'RACK', 'RAGE', 'RAID', 'RAIL', 'RAIN', 'RANK', 'RARE', 'RATE', 'READ', 'RENT',
+            'REST', 'RICH', 'RIDE', 'RING', 'RISE', 'RISK', 'ROAD', 'ROCK', 'ROLE', 'ROLL',
+            'ROOF', 'ROOM', 'ROOT', 'ROPE', 'ROSE', 'RULE', 'RUSH', 'RUTH', 'SAFE', 'SAGE',
+            'SAID', 'SAIL', 'SAKE', 'SALE', 'SALT', 'SAND', 'SANG', 'SAVE', 'SCAN', 'SEAL',
+            'SEAT', 'SEED', 'SEEK', 'SEEM', 'SEEN', 'SELF', 'SELL', 'SEND', 'SENT', 'SHED',
+            'SHIP', 'SHOE', 'SHOP', 'SHOT', 'SHUT', 'SICK', 'SIGN', 'SILK', 'SING', 'SINK',
+            'SITE', 'SIZE', 'SKIP', 'SLIM', 'SLIP', 'SLOW', 'SNAP', 'SNOW', 'SOAP', 'SOCK',
+            'SOFT', 'SOIL', 'SOLE', 'SOME', 'SONG', 'SOON', 'SORT', 'SOUL', 'SOUP', 'SPOT',
+            'STAR', 'STAY', 'STEM', 'STEP', 'STIR', 'STOP', 'SUIT', 'SURE', 'SWAP', 'SWIM',
+            'TAIL', 'TALE', 'TALK', 'TALL', 'TANK', 'TAPE', 'TASK', 'TAXI', 'TEAM', 'TEAR',
+            'TEEN', 'TEND', 'TENT', 'TERM', 'TEST', 'TEXT', 'THAN', 'THEM', 'THEN', 'THEY',
+            'THIN', 'TIDE', 'TIED', 'TILL', 'TINY', 'TIRE', 'TOLD', 'TOLL', 'TONE', 'TONY',
+            'TOOK', 'TOOL', 'TOPS', 'TORN', 'TOUR', 'TOWN', 'TRAP', 'TRAY', 'TREE', 'TRIM',
+            'TRIP', 'TRUE', 'TUBE', 'TUNE', 'TURN', 'TWIN', 'TYPE', 'UNIT', 'UPON', 'USED',
+            'USER', 'VARY', 'VAST', 'VERB', 'VERY', 'VICE', 'VIEW', 'VOTE', 'WAGE', 'WAIT',
+            'WAKE', 'WALK', 'WALL', 'WARM', 'WARN', 'WASH', 'WAVE', 'WEAK', 'WEAR', 'WEED',
+            'WELL', 'WEST', 'WHAT', 'WHEN', 'WHOM', 'WIDE', 'WIFE', 'WILD', 'WILL', 'WIND',
+            'WINE', 'WING', 'WIRE', 'WISE', 'WISH', 'WITH', 'WOLF', 'WOOD', 'WOOL', 'WORE',
+            'WORN', 'WRAP', 'YARD', 'YEAH', 'YEAR', 'YELL', 'YOUR', 'ZERO', 'ZONE', 'ZOOM'
+        ]);
+
+        // DOM Elements
+        const lettersContainer = document.getElementById('letters-container');
+        const timerDisplay = document.getElementById('timer');
+        const progressBar = document.getElementById('progress-bar');
+        const scoreDisplay = document.getElementById('score');
+        const messageDisplay = document.getElementById('message');
+        const clearBtn = document.getElementById('clear-btn');
+        const newGameBtn = document.getElementById('new-game-btn');
+        const mainMenu = document.getElementById('main-menu');
+        const gameContainer = document.getElementById('game-container');
+        const instructionsPopup = document.getElementById('instructions-popup');
+        const countdownDisplay = document.getElementById('countdown-display');
+        const startGameBtn = document.getElementById('start-game-btn');
+        const nameInputPopup = document.getElementById('name-input-popup');
+        const playerNameInput = document.getElementById('player-name-input');
+        const submitNameBtn = document.getElementById('submit-name-btn');
+
+        // Audio Context for sound effects
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Leaderboard Functions
+        function loadLeaderboard() {
+            const saved = localStorage.getItem('wordRiceLeaderboard');
+            return saved ? JSON.parse(saved) : [];
+        }
+
+        function saveLeaderboard(scores) {
+            localStorage.setItem('wordRiceLeaderboard', JSON.stringify(scores));
+        }
+
+        function isTopTen(score) {
+            const leaderboard = loadLeaderboard();
+            if (leaderboard.length < 10) return true;
+            return score > leaderboard[9].score;
+        }
+
+        function addScore(score, name) {
+            const leaderboard = loadLeaderboard();
+            leaderboard.push({ 
+                score, 
+                name: name || 'Rice', 
+                date: new Date().toISOString() 
+            });
+            leaderboard.sort((a, b) => b.score - a.score);
+            leaderboard.splice(10); // Keep only top 10
+            saveLeaderboard(leaderboard);
+        }
+
+        function displayLeaderboard() {
+            const leaderboard = loadLeaderboard();
+            const leaderboardList = document.getElementById('leaderboard-list');
+            
+            if (leaderboard.length === 0) {
+                leaderboardList.innerHTML = '<div style="text-align: center; color: #B8B8B8; padding: 20px;">No scores yet!</div>';
+                return;
+            }
+            
+            leaderboardList.innerHTML = '';
+            leaderboard.forEach((entry, index) => {
+                const entryDiv = document.createElement('div');
+                entryDiv.className = 'leaderboard-entry' + (index < 3 ? ' top-3' : '');
+                entryDiv.innerHTML = `
+                    <span class="leaderboard-rank">#${index + 1}</span>
+                    <span class="leaderboard-name">${entry.name || 'Rice'}</span>
+                    <span class="leaderboard-score">${entry.score}</span>
+                `;
+                leaderboardList.appendChild(entryDiv);
+            });
+        }
+
+        // Game Flow Functions
+        function showMainMenu() {
+            mainMenu.style.display = 'flex';
+            gameContainer.style.display = 'none';
+            instructionsPopup.style.display = 'none';
+            nameInputPopup.style.display = 'none';
+            displayLeaderboard();
+        }
+
+        function showInstructionsAndCountdown() {
+            mainMenu.style.display = 'none';
+            instructionsPopup.style.display = 'flex';
+            document.getElementById('instructions-text').style.display = 'block';
+            countdownDisplay.style.display = 'block';
+            
+            // Start countdown immediately
+            let count = 5;
+            countdownDisplay.textContent = count;
+            
+            const countInterval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdownDisplay.textContent = count;
+                } else {
+                    clearInterval(countInterval);
+                    countdownDisplay.textContent = 'GO!';
+                    setTimeout(() => {
+                        startGame();
+                    }, 500);
+                }
+            }, 1000);
+        }
+
+        function startGame() {
+            instructionsPopup.style.display = 'none';
+            gameContainer.style.display = 'block';
+            initGame();
+        }
+
+        // Start Game Button
+        startGameBtn.addEventListener('click', () => {
+            showInstructionsAndCountdown();
+        });
+
+        // Sound effect functions
+        function playInvalidSound() {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 200;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.2);
+        }
+
+        function playCorrectSound() {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 600;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.15);
+        }
+
+        function playYaySound() {
+            // Play a cheerful three-note melody
+            const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+            const startTime = audioContext.currentTime;
+            
+            notes.forEach((freq, i) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = freq;
+                oscillator.type = 'sine';
+                
+                const noteStart = startTime + (i * 0.12);
+                gainNode.gain.setValueAtTime(0.25, noteStart);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, noteStart + 0.25);
+                
+                oscillator.start(noteStart);
+                oscillator.stop(noteStart + 0.25);
+            });
+        }
+
+        // Animate a single rice particle
+        function animateRiceParticle(element, startX, startY, velocityX, velocityY, rotationSpeed, duration, isExplosive = false) {
+            const startTime = performance.now();
+            const gravity = 0.00015; // Reduced gravity for more spread
+            const airResistance = 0.995; // Less air resistance for more spread
+            
+            let vx = velocityX;
+            let vy = velocityY;
+            let x = startX;
+            let y = startY;
+            let rotation = 0;
+            let scale = 0.3; // Start smaller for explosion effect
+            
+            function animate(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                if (progress >= 1) {
+                    element.remove();
+                    return;
+                }
+                
+                // Explosive start - rapid expansion in first 10%
+                let explosionScale = 1;
+                if (isExplosive && progress < 0.1) {
+                    explosionScale = 0.3 + (progress / 0.1) * 1.2; // Scale from 0.3 to 1.5
+                } else if (isExplosive && progress < 0.2) {
+                    explosionScale = 1.5 - ((progress - 0.1) / 0.1) * 0.5; // Scale back to 1
+                }
+                
+                // Apply physics
+                vy += gravity * elapsed; // Gravity increases velocity downward
+                vx *= airResistance; // Air resistance
+                vy *= airResistance;
+                
+                x += vx;
+                y += vy;
+                rotation += rotationSpeed;
+                
+                // Scale and opacity based on progress
+                const baseScale = 1 - (progress * 0.5); // Shrink to 50%
+                scale = baseScale * (isExplosive ? explosionScale : 1);
+                const opacity = 1 - progress;
+                
+                // Apply transform
+                element.style.transform = `translate(${x}px, ${y}px) rotate(${rotation}deg) scale(${scale})`;
+                element.style.opacity = opacity;
+                
+                requestAnimationFrame(animate);
+            }
+            
+            requestAnimationFrame(animate);
+        }
+
+        // Spawn rice particles at a position
+        function spawnRiceParticles(x, y, count = 8) {
+            for (let i = 0; i < count; i++) {
+                const rice = document.createElement('div');
+                rice.className = 'rice-particle';
+                
+                // Explosive burst with varied speeds
+                const angle = (Math.PI * 2 * i) / count + (Math.random() * 0.5 - 0.25);
+                const speedVariation = Math.random(); // 0 to 1 for varied explosion
+                const speed = 0.6 + speedVariation * 0.6; // 0.6 to 1.2 - explosive initial burst
+                const velocityX = Math.cos(angle) * speed;
+                const velocityY = Math.sin(angle) * speed - 0.2; // Strong upward bias
+                const rotationSpeed = (Math.random() - 0.5) * 1.2; // Faster rotation for explosion
+                
+                rice.style.left = x + 'px';
+                rice.style.top = y + 'px';
+                
+                document.body.appendChild(rice);
+                
+                // Animate with explosive effect
+                animateRiceParticle(rice, 0, 0, velocityX, velocityY, rotationSpeed, 1600, true);
+            }
+        }
+
+        // Spawn rice burst around task box
+        function spawnTaskCompletionRice() {
+            const taskBox = document.getElementById('word-display-container');
+            const rect = taskBox.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            // Create explosive burst of rice particles
+            const particleCount = 25;
+            for (let i = 0; i < particleCount; i++) {
+                const rice = document.createElement('div');
+                rice.className = 'rice-particle';
+                
+                // Explosive burst in all directions with huge variation
+                const angle = (Math.PI * 2 * i) / particleCount + (Math.random() * 0.4 - 0.2);
+                const speedVariation = Math.random(); // Create layers of explosion
+                const speed = 0.8 + speedVariation * 1.0; // 0.8 to 1.8 - massive explosion
+                const velocityX = Math.cos(angle) * speed;
+                const velocityY = Math.sin(angle) * speed - 0.3; // Strong upward explosion
+                const rotationSpeed = (Math.random() - 0.5) * 1.5; // Wild rotation
+                
+                rice.style.left = centerX + 'px';
+                rice.style.top = centerY + 'px';
+                
+                document.body.appendChild(rice);
+                
+                // Animate with explosive effect
+                animateRiceParticle(rice, 0, 0, velocityX, velocityY, rotationSpeed, 2000, true);
+            }
+        }
+
+        // Initialize game
+        function initGame() {
+            gameState.letters = [];
+            gameState.selectedLetters = [];
+            gameState.score = 0;
+            gameState.timeLeft = 30;
+            gameState.tasksCompleted = 0;
+            gameState.completedTasks = [];
+            gameState.wrongClicks = 0;
+            
+            clearLetterDisplay();
+            generateNewTask();
+            updateScore();
+            startTimer();
+        }
+
+        // Generate new task
+        function generateNewTask() {
+            const wordsArray = Array.from(wordDictionary);
+            gameState.currentTask = wordsArray[Math.floor(Math.random() * wordsArray.length)];
+            gameState.taskStartTime = performance.now();
+            
+            // Reset selected letters
+            gameState.selectedLetters = [];
+            
+            displayTaskWord();
+            generateLettersForTask();
+        }
+
+        // Display task word (greyed out)
+        function displayTaskWord() {
+            for (let i = 0; i < 4; i++) {
+                const slot = document.getElementById(`slot-${i}`);
+                slot.textContent = gameState.currentTask[i];
+                slot.classList.remove('filled', 'lit');
+                slot.classList.add('task-letter');
+            }
+        }
+
+        // Generate letters for task
+        function generateLettersForTask() {
+            const vowels = 'AEIOU';
+            const consonants = 'BCDFGHJKLMNPQRSTVWXYZ';
+            const allLetters = vowels + consonants;
+            
+            lettersContainer.innerHTML = '';
+            gameState.letters = [];
+            gameState.selectedLetters = [];
+            
+            // Add the 4 correct letters
+            for (let i = 0; i < gameState.currentTask.length; i++) {
+                gameState.letters.push(gameState.currentTask[i]);
+            }
+            
+            // Add 8 random letters (that are NOT in the task word)
+            const taskLetters = new Set(gameState.currentTask.split(''));
+            while (gameState.letters.length < 12) {
+                const randomLetter = allLetters[Math.floor(Math.random() * allLetters.length)];
+                // Allow duplicate randoms, just not the exact task letters in excess
+                gameState.letters.push(randomLetter);
+            }
+            
+            // Shuffle all letters
+            gameState.letters.sort(() => Math.random() - 0.5);
+            
+            // Define safe word pool area (middle of screen)
+            const tileSize = 80;
+            const padding = 20; // Minimum space between tiles
+            const poolTop = 280; // Below progress bar and timer
+            const poolBottom = window.innerHeight - 280; // Above word display and buttons
+            const poolLeft = 200; // Increased left offset
+            const poolRight = window.innerWidth - 200; // Increased right offset
+            
+            const positions = [];
+            
+            // Create letter tiles with collision detection
+            gameState.letters.forEach((letter, index) => {
+                const tile = document.createElement('div');
+                tile.className = 'letter-tile';
+                tile.textContent = letter;
+                tile.dataset.index = index;
+                
+                // Find non-overlapping position
+                let x, y, rotation;
+                let attempts = 0;
+                let validPosition = false;
+                
+                while (!validPosition && attempts < 100) {
+                    x = Math.random() * (poolRight - poolLeft - tileSize) + poolLeft;
+                    y = Math.random() * (poolBottom - poolTop - tileSize) + poolTop;
+                    rotation = Math.random() * 30 - 15;
+                    
+                    // Check collision with existing tiles
+                    validPosition = true;
+                    for (const pos of positions) {
+                        const dx = x - pos.x;
+                        const dy = y - pos.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        // If too close to another tile, try again
+                        if (distance < tileSize + padding) {
+                            validPosition = false;
+                            break;
+                        }
+                    }
+                    
+                    attempts++;
+                }
+                
+                // Store position
+                positions.push({ x, y });
+                
+                tile.style.left = x + 'px';
+                tile.style.top = y + 'px';
+                tile.style.setProperty('--rotation', rotation + 'deg');
+                
+                tile.addEventListener('click', () => selectLetter(index));
+                
+                lettersContainer.appendChild(tile);
+            });
+        }
+
+        // Select letter
+        function selectLetter(index) {
+            if (gameState.selectedLetters.length >= 4) return;
+            
+            const tiles = document.querySelectorAll('.letter-tile');
+            const tile = tiles[index];
+            
+            if (tile.classList.contains('selected')) return;
+            
+            const clickedLetter = gameState.letters[index];
+            
+            // Check if this letter is needed for the task
+            const taskLetters = gameState.currentTask.split('');
+            const alreadySelected = gameState.selectedLetters.map(s => s.letter);
+            
+            // Find if this letter exists in the task and hasn't been selected yet
+            let isCorrect = false;
+            let targetSlotIndex = -1;
+            
+            for (let i = 0; i < taskLetters.length; i++) {
+                if (taskLetters[i] === clickedLetter) {
+                    // Check if this slot is already filled
+                    const slotFilled = gameState.selectedLetters.some(s => s.slotIndex === i);
+                    if (!slotFilled) {
+                        isCorrect = true;
+                        targetSlotIndex = i;
+                        break;
+                    }
+                }
+            }
+            
+            if (isCorrect) {
+                // Correct letter - fly to slot
+                playCorrectSound();
+                tile.classList.add('selected');
+                
+                // Spawn rice particles at tile position
+                const tileRect = tile.getBoundingClientRect();
+                const tileCenterX = tileRect.left + tileRect.width / 2;
+                const tileCenterY = tileRect.top + tileRect.height / 2;
+                spawnRiceParticles(tileCenterX, tileCenterY, 6);
+                
+                const slot = document.getElementById(`slot-${targetSlotIndex}`);
+                const slotRect = slot.getBoundingClientRect();
+                
+                // Calculate the distance to move
+                const deltaX = slotRect.left - tileRect.left + (slotRect.width - tileRect.width) / 2;
+                const deltaY = slotRect.top - tileRect.top + (slotRect.height - tileRect.height) / 2;
+                
+                // Animate the tile flying to the slot
+                tile.classList.add('flying');
+                tile.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(0deg) scale(0.9)`;
+                tile.style.opacity = '0.5';
+                
+                // Update the slot
+                setTimeout(() => {
+                    slot.textContent = clickedLetter;
+                    slot.classList.add('lit');
+                    slot.classList.remove('task-letter');
+                    
+                    // Hide the flying tile
+                    tile.style.opacity = '0';
+                }, 500);
+                
+                gameState.selectedLetters.push({ 
+                    letter: clickedLetter, 
+                    index: index,
+                    slotIndex: targetSlotIndex 
+                });
+                
+                // Check if task is complete
+                if (gameState.selectedLetters.length === 4) {
+                    setTimeout(() => {
+                        playYaySound();
+                        spawnTaskCompletionRice();
+                        completeTask();
+                    }, 700);
+                }
+            } else {
+                // Wrong letter - shake, play invalid sound, and deduct points
+                playInvalidSound();
+                tile.classList.add('shake');
+                
+                // Deduct 20 points and track wrong clicks
+                gameState.score = Math.max(0, gameState.score - 20);
+                gameState.wrongClicks++;
+                updateScore();
+                
+                setTimeout(() => {
+                    tile.classList.remove('shake');
+                }, 300);
+            }
+        }
+
+        // Clear letter display
+        function clearLetterDisplay() {
+            gameState.selectedLetters.forEach(({ index, slotIndex }) => {
+                const tiles = document.querySelectorAll('.letter-tile');
+                if (tiles[index]) {
+                    tiles[index].classList.remove('selected', 'flying');
+                    tiles[index].style.transform = '';
+                    tiles[index].style.opacity = '1';
+                }
+                
+                // Reset the slot
+                if (slotIndex !== undefined) {
+                    const slot = document.getElementById(`slot-${slotIndex}`);
+                    slot.textContent = gameState.currentTask[slotIndex];
+                    slot.classList.remove('lit');
+                    slot.classList.add('task-letter');
+                }
+            });
+            gameState.selectedLetters = [];
+        }
+
+        // Clear selection
+        clearBtn.addEventListener('click', clearLetterDisplay);
+
+        // Complete task (called when all 4 correct letters are selected)
+        function completeTask() {
+            // Calculate time taken (in seconds, up to 2 decimal places)
+            const timeElapsed = (performance.now() - gameState.taskStartTime) / 1000;
+            const timeFormatted = timeElapsed.toFixed(2);
+            
+            // Calculate score: Direct correlation with time
+            // Formula: 200 - (time × 25), minimum 30 points
+            const calculatedScore = 200 - (timeElapsed * 25);
+            const displayScore = Math.max(30, Math.round(calculatedScore));
+            
+            // Store completed task details
+            gameState.completedTasks.push({
+                word: gameState.currentTask,
+                time: parseFloat(timeFormatted),
+                score: displayScore
+            });
+            
+            gameState.score += displayScore;
+            gameState.tasksCompleted++;
+            updateScore();
+            
+            // Disable clicking during transition
+            document.querySelectorAll('.letter-tile').forEach(tile => {
+                tile.style.pointerEvents = 'none';
+            });
+            
+            // Generate new task after brief delay
+            setTimeout(() => {
+                generateNewTask();
+                // Re-enable clicking
+                document.querySelectorAll('.letter-tile').forEach(tile => {
+                    tile.style.pointerEvents = 'auto';
+                });
+            }, 800);
+        }
+
+        // Update score display
+        function updateScore() {
+            scoreDisplay.textContent = String(gameState.score).padStart(4, '0');
+        }
+
+        // Show message
+        function showMessage(text, type) {
+            messageDisplay.innerHTML = text.replace(/\n/g, '<br>');
+            messageDisplay.style.display = 'block';
+            
+            if (type === 'success') {
+                messageDisplay.style.color = '#FFD700';
+                messageDisplay.style.borderColor = '#8B6914';
+            } else if (type === 'error') {
+                messageDisplay.style.color = '#FF6B6B';
+                messageDisplay.style.borderColor = '#C92A2A';
+            } else {
+                messageDisplay.style.color = '#74C0FC';
+                messageDisplay.style.borderColor = '#1C7ED6';
+            }
+            
+            setTimeout(() => {
+                messageDisplay.style.display = 'none';
+            }, 1500);
+        }
+
+        // Timer
+        function startTimer() {
+            if (gameState.timerInterval) {
+                clearInterval(gameState.timerInterval);
+            }
+            
+            gameState.timerInterval = setInterval(() => {
+                gameState.timeLeft--;
+                
+                const minutes = Math.floor(gameState.timeLeft / 60);
+                const seconds = gameState.timeLeft % 60;
+                timerDisplay.textContent = `0:${String(seconds).padStart(2, '0')}`;
+                
+                const progressPercent = (gameState.timeLeft / 30) * 100;
+                progressBar.style.width = progressPercent + '%';
+                
+                if (gameState.timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        // End game
+        function endGame() {
+            clearInterval(gameState.timerInterval);
+            
+            document.querySelectorAll('.letter-tile').forEach(tile => {
+                tile.style.pointerEvents = 'none';
+            });
+            
+            // Check if score qualifies for top 10
+            if (gameState.score > 0 && isTopTen(gameState.score)) {
+                // Show name input popup
+                showNameInputPopup();
+            } else {
+                // Show score screen without name entry
+                showScoreScreen();
+            }
+        }
+
+        // Show name input popup
+        function showNameInputPopup() {
+            nameInputPopup.style.display = 'flex';
+            playerNameInput.value = '';
+            
+            // Display the score
+            document.getElementById('name-input-score').textContent = gameState.score;
+            
+            playerNameInput.focus();
+        }
+
+        // Submit name and show score screen
+        function submitNameAndShowScore() {
+            const playerName = playerNameInput.value.trim() || 'Rice';
+            addScore(gameState.score, playerName);
+            nameInputPopup.style.display = 'none';
+            showScoreScreen();
+        }
+
+        // Show score screen
+        function showScoreScreen() {
+            // Build detailed score screen
+            let scoreHTML = `<div class="score-header">GAME OVER!</div>`;
+            
+            if (gameState.completedTasks.length > 0) {
+                scoreHTML += `<div class="task-list">`;
+                
+                gameState.completedTasks.forEach((task, index) => {
+                    scoreHTML += `
+                        <div class="task-item">
+                            <span class="task-word">${task.word}</span>
+                            <span class="task-time">${task.time.toFixed(2)}s</span>
+                            <span class="task-score">+${task.score}</span>
+                        </div>
+                    `;
+                });
+                
+                // Add penalty line if there were wrong clicks
+                if (gameState.wrongClicks > 0) {
+                    const totalPenalty = gameState.wrongClicks * 20;
+                    scoreHTML += `
+                        <div class="penalty-item">
+                            <span class="penalty-label">Wrong Letters (${gameState.wrongClicks}×)</span>
+                            <span class="penalty-score">-${totalPenalty}</span>
+                        </div>
+                    `;
+                }
+                
+                scoreHTML += `</div>`;
+            } else {
+                scoreHTML += `<div style="text-align: center; margin: 20px 0; color: #B8B8B8;">No tasks completed</div>`;
+            }
+            
+            scoreHTML += `
+                <div class="final-score">
+                    TOTAL SCORE<br>
+                    <span style="font-size: 48px;">${gameState.score}</span>
+                </div>
+                <div class="return-countdown">
+                    Returning to menu in <span class="return-countdown-number" id="return-countdown">8</span>s
+                </div>
+            `;
+            
+            messageDisplay.innerHTML = scoreHTML;
+            messageDisplay.classList.add('score-screen');
+            messageDisplay.style.display = 'block';
+            
+            // Countdown timer
+            let countdown = 8;
+            const countdownElement = document.getElementById('return-countdown');
+            
+            const countdownInterval = setInterval(() => {
+                countdown--;
+                if (countdownElement) {
+                    countdownElement.textContent = countdown;
+                }
+                
+                if (countdown <= 0) {
+                    clearInterval(countdownInterval);
+                    messageDisplay.style.display = 'none';
+                    messageDisplay.classList.remove('score-screen');
+                    showMainMenu();
+                }
+            }, 1000);
+        }
+
+        // Submit name button
+        submitNameBtn.addEventListener('click', submitNameAndShowScore);
+        
+        // Allow Enter key to submit name
+        playerNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                submitNameAndShowScore();
+            }
+        });
+
+        // New game - Return to main menu
+        newGameBtn.addEventListener('click', () => {
+            clearInterval(gameState.timerInterval);
+            messageDisplay.style.display = 'none';
+            messageDisplay.classList.remove('score-screen');
+            showMainMenu();
+        });
+
+        // Initialize on page load
+        showMainMenu();
+    </script>
+</body>
+</html>
